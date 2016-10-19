@@ -37,6 +37,17 @@ disruptors:
        custom_controller:
            role: nova, cinder
  
+    # Juju disruptor:
+    # Based on `container_disruptor`. The key of the scenario object must be the
+    # same as the application name specified in Juju.
+    # Configuration options:
+    #   - disruption: as in container_disruptor
+    juju_disruptor:
+        keystone:
+            disruption: finite
+        cinder:
+            disruption: finite
+
     container_disruptor:
        keystone_container:
            container_name: docker-keystone.service

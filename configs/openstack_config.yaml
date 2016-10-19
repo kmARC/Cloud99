@@ -24,3 +24,7 @@ control-3:
     user: root
     password: ''
     role: controller
+# Juju static configuration. 
+# Obtain a `juju_status.yaml` file by running `juju status --format=yaml > juju_status.yaml`
+juju-static:
+    filename: /path/tojuju_status.yaml
