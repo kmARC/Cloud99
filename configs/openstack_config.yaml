@@ -27,4 +27,7 @@ control-3:
 # Juju static configuration. 
 # Obtain a `juju_status.yaml` file by running `juju status --format=yaml > juju_status.yaml`
 juju-static:
-    filename: /path/tojuju_status.yaml
+    filename: /path/to/juju_status.yaml
+    user: ubuntu
+    key_filename: /path/to/ssh_key_file
+    timeout: 20

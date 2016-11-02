@@ -39,6 +39,10 @@ class JujuDisruptor(BaseDisruptor):
 
         nodes_to_be_disrupted = []
         juju = {}
+        user = ''
+        key_filename = ''
+        password = ''
+        timeout = 10
         for node in host_config:
             if 'filename' not in host_config[node]:
                 # TODO: exception
@@ -51,6 +55,28 @@ class JujuDisruptor(BaseDisruptor):
                     print(exc)
                     return
             break
+        
+            # get the username from config
+            #
+            if 'user' not in host_config[node]:
+                user = 'ubuntu'
+            else:
+                user = host_config[node].get('user')
+             
+            # get the ssh keyfile name from config, if not set fallback to
+            # password auth
+            if 'key_filename' in host_config[node]:
+                key_filename = host_config[node].get('key_filename')
+            else:
+                if 'password' not in host_config[node]:
+                    password = ''
+                else:
+                    password = host_config[node].get('password')
+                    
+            # get the ssh timeout
+            #
+            if 'timeout' in host_config[node]:
+                timeout = host_config[node].get('timeout')
 
         if app_name not in juju['applications']:
             # TODO: exception
@@ -102,12 +128,18 @@ class JujuDisruptor(BaseDisruptor):
                     container_stop_command = "lxc stop " + instance_id
                     container_start_command = "lxc start " + instance_id
                     ip = node
-                    user = 'ubuntu'
-                    password = ''
                     infra.display_on_terminal(self, "Stopping ", instance_id)
                     infra.display_on_terminal(self, "Executing `", container_stop_command, "` on ", ip)
-                    # code, out, error = infra.ssh_and_execute_command(
-                    #         ip, user, password, container_stop_command)
+                    # if a ssh keyfile is provided use it, othwise fall back to
+                    # password auth
+                    if length(key_filename) > 0:
+                        infra.display_on_terminal(self, "Using ssh key authentication")
+                        #code, out, err = infra.ssh_and_execute_command(
+                        #    ip, user, None, container_stop_command, timeout, None, key_filename)
+                    else:
+                        infra.display_on_terminal(self, "Using ssh password authentication")
+                        # code, out, error = infra.ssh_and_execute_command(
+                        #         ip, user, password, container_stop_command)
                     infra.add_table_rows(self, table_name, [[ip,
                                                            instance_id,
                                                            utils.get_timestamp(),
@@ -122,8 +154,17 @@ class JujuDisruptor(BaseDisruptor):
                     time.sleep(ha_interval)
                     infra.display_on_terminal(self, "Starting ", instance_id)
                     infra.display_on_terminal(self, "Executing ", container_start_command)
-                    # code, out, error = infra.ssh_and_execute_command(
-                    #         ip, user, password, container_start_command)
+                    # if a ssh keyfile is provided use it, othwise fall back to
+                    # password auth
+                    if length(key_filename) > 0:
+                        infra.display_on_terminal(self, "Using ssh key authentication")
+                        #code, out, err = infra.ssh_and_execute_command(
+                        #    ip, user, None, container_stop_command, timeout, None, key_filename)
+                    else:
+                        infra.display_on_terminal(self, "Using ssh password authentication")
+                        # code, out, error = infra.ssh_and_execute_command(
+                        #         ip, user, password, container_stop_command)
+
                     time.sleep(ha_interval)
                     infra.add_table_rows(self, table_name, [[ip,
                                                            instance_id,
