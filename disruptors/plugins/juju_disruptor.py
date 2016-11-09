@@ -125,8 +125,8 @@ class JujuDisruptor(BaseDisruptor):
             if disruption_count:
                 disruption_count = disruption_count - 1
                 for node, instance_id in nodes_to_be_disrupted:
-                    container_stop_command = "lxc stop " + instance_id
-                    container_start_command = "lxc start " + instance_id
+                    container_stop_command = "sudo lxc stop " + instance_id
+                    container_start_command = "sudo lxc start " + instance_id
                     ip = node
                     infra.display_on_terminal(self, "Stopping ", instance_id)
                     infra.display_on_terminal(self, "Executing `", container_stop_command, "` on ", ip)
@@ -134,12 +134,12 @@ class JujuDisruptor(BaseDisruptor):
                     # password auth
                     if length(key_filename) > 0:
                         infra.display_on_terminal(self, "Using ssh key authentication")
-                        #code, out, err = infra.ssh_and_execute_command(
-                        #    ip, user, None, container_stop_command, timeout, None, key_filename)
+                        code, out, err = infra.ssh_and_execute_command(
+                            ip, user, None, container_stop_command, timeout, None, key_filename)
                     else:
                         infra.display_on_terminal(self, "Using ssh password authentication")
-                        # code, out, error = infra.ssh_and_execute_command(
-                        #         ip, user, password, container_stop_command)
+                        code, out, error = infra.ssh_and_execute_command(
+                                ip, user, password, container_stop_command)
                     infra.add_table_rows(self, table_name, [[ip,
                                                            instance_id,
                                                            utils.get_timestamp(),
@@ -158,12 +158,12 @@ class JujuDisruptor(BaseDisruptor):
                     # password auth
                     if length(key_filename) > 0:
                         infra.display_on_terminal(self, "Using ssh key authentication")
-                        #code, out, err = infra.ssh_and_execute_command(
-                        #    ip, user, None, container_stop_command, timeout, None, key_filename)
+                        code, out, err = infra.ssh_and_execute_command(
+                            ip, user, None, container_start_command, timeout, None, key_filename)
                     else:
                         infra.display_on_terminal(self, "Using ssh password authentication")
-                        # code, out, error = infra.ssh_and_execute_command(
-                        #         ip, user, password, container_stop_command)
+                        code, out, error = infra.ssh_and_execute_command(
+                                ip, user, password, container_start_command)
 
                     time.sleep(ha_interval)
                     infra.add_table_rows(self, table_name, [[ip,
