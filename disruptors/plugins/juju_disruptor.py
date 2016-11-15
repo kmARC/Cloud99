@@ -55,7 +55,7 @@ class JujuDisruptor(BaseDisruptor):
                     print(exc)
                     return
             break
-        
+
             # get the username from config
             #
             if 'user' not in host_config[node]:
@@ -72,7 +72,7 @@ class JujuDisruptor(BaseDisruptor):
                     password = ''
                 else:
                     password = host_config[node].get('password')
-                    
+
             # get the ssh timeout
             #
             if 'timeout' in host_config[node]:
@@ -89,24 +89,32 @@ class JujuDisruptor(BaseDisruptor):
             print ("No units for " + app_name)
             return
 
-        containers = []
+        lxcs = []
+        vms = []
         for unit_name, unit in app['units'].items():
-            if 'lxd' not in unit["machine"]:
+            if 'lxd' in unit["machine"]:
+                lxcs.append(unit['machine'])
+            elif 'kvm' in unit["machine"]:
+                vms.append(unit["machine"])
+            else:
                 # TODO: exception
-                print ("Not containerized: " + app_name)
+                print ("App not found in container/vm: " + app_name)
                 return
-            containers.append(unit['machine'])
 
-        print("Containers to disrupt: ", containers)
+        print("LXC containers to disrupt: ", lxcs)
+        print("VMs to disrupt: ", vms)
 
         for machine_name, machine in juju['machines'].items():
             if 'containers' not in machine:
                 continue
             for container_name, container in machine['containers'].items():
-                if container_name in containers:
+                if container_name in lxcs:
                     infra.display_on_terminal(self, machine['dns-name'], " will be disrupted ")
-                    nodes_to_be_disrupted.append((machine['dns-name'], container['instance-id']))
-                    break
+                    nodes_to_be_disrupted.append((machine['dns-name'], container['instance-id'], 'lxd'))
+                    # break
+                if container_name in vms:
+                    infra.display_on_terminal(self, machine['dns-name'], " will be disrupted ")
+                    nodes_to_be_disrupted.append((machine['dns-name'], container['instance-id'], 'kvm'))
 
         ha_start_delay = self.get_ha_start_delay()
         if sync:
@@ -124,22 +132,30 @@ class JujuDisruptor(BaseDisruptor):
         while infra.is_execution_completed(self.finish_execution) is False:
             if disruption_count:
                 disruption_count = disruption_count - 1
-                for node, instance_id in nodes_to_be_disrupted:
-                    container_stop_command = "sudo lxc stop " + instance_id
-                    container_start_command = "sudo lxc start " + instance_id
+                for node, instance_id, type_ in nodes_to_be_disrupted:
+                    if type_ == 'lxd':
+                        container_stop_command = "sudo lxc stop " + instance_id
+                        container_start_command = "sudo lxc start " + instance_id
+                    elif type_ == 'kvm':
+                        container_stop_command = "sudo virsh destroy " + instance_id
+                        container_start_command = "sudo virsh start " + instance_id
+                    else:
+                        # TODO exception
+                        infra.display_on_terminal(self, "Unknown service type ", type_)
+                        continue
                     ip = node
                     infra.display_on_terminal(self, "Stopping ", instance_id)
                     infra.display_on_terminal(self, "Executing `", container_stop_command, "` on ", ip)
                     # if a ssh keyfile is provided use it, othwise fall back to
                     # password auth
-                    if length(key_filename) > 0:
+                    if len(key_filename) > 0:
                         infra.display_on_terminal(self, "Using ssh key authentication")
-                        code, out, err = infra.ssh_and_execute_command(
-                            ip, user, None, container_stop_command, timeout, None, key_filename)
+                        # code, out, err = infra.ssh_and_execute_command(
+                            # ip, user, None, container_stop_command, timeout, None, key_filename)
                     else:
                         infra.display_on_terminal(self, "Using ssh password authentication")
-                        code, out, error = infra.ssh_and_execute_command(
-                                ip, user, password, container_stop_command)
+                        # code, out, error = infra.ssh_and_execute_command(
+                        #         ip, user, password, container_stop_command)
                     infra.add_table_rows(self, table_name, [[ip,
                                                            instance_id,
                                                            utils.get_timestamp(),
@@ -156,14 +172,14 @@ class JujuDisruptor(BaseDisruptor):
                     infra.display_on_terminal(self, "Executing ", container_start_command)
                     # if a ssh keyfile is provided use it, othwise fall back to
                     # password auth
-                    if length(key_filename) > 0:
+                    if len(key_filename) > 0:
                         infra.display_on_terminal(self, "Using ssh key authentication")
-                        code, out, err = infra.ssh_and_execute_command(
-                            ip, user, None, container_start_command, timeout, None, key_filename)
+                        # code, out, err = infra.ssh_and_execute_command(
+                        #     ip, user, None, container_stop_command, timeout, None, key_filename)
                     else:
                         infra.display_on_terminal(self, "Using ssh password authentication")
-                        code, out, error = infra.ssh_and_execute_command(
-                                ip, user, password, container_start_command)
+                        # code, out, error = infra.ssh_and_execute_command(
+                        #         ip, user, password, container_stop_command)
 
                     time.sleep(ha_interval)
                     infra.add_table_rows(self, table_name, [[ip,
