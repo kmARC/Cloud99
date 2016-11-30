@@ -54,7 +54,6 @@ class JujuDisruptor(BaseDisruptor):
                 except yaml.YAMLError as exc:
                     print(exc)
                     return
-            break
 
             # get the username from config
             #
@@ -150,12 +149,12 @@ class JujuDisruptor(BaseDisruptor):
                     # password auth
                     if len(key_filename) > 0:
                         infra.display_on_terminal(self, "Using ssh key authentication")
-                        # code, out, err = infra.ssh_and_execute_command(
-                            # ip, user, None, container_stop_command, timeout, None, key_filename)
+                        code, out, err = infra.ssh_and_execute_command(
+                            ip, user, None, container_stop_command, timeout, None, key_filename)
                     else:
                         infra.display_on_terminal(self, "Using ssh password authentication")
-                        # code, out, error = infra.ssh_and_execute_command(
-                        #         ip, user, password, container_stop_command)
+                        code, out, error = infra.ssh_and_execute_command(
+                            ip, user, password, container_stop_command)
                     infra.add_table_rows(self, table_name, [[ip,
                                                            instance_id,
                                                            utils.get_timestamp(),
@@ -174,12 +173,12 @@ class JujuDisruptor(BaseDisruptor):
                     # password auth
                     if len(key_filename) > 0:
                         infra.display_on_terminal(self, "Using ssh key authentication")
-                        # code, out, err = infra.ssh_and_execute_command(
-                        #     ip, user, None, container_stop_command, timeout, None, key_filename)
+                        code, out, err = infra.ssh_and_execute_command(
+                            ip, user, None, container_start_command, timeout, None, key_filename)
                     else:
                         infra.display_on_terminal(self, "Using ssh password authentication")
-                        # code, out, error = infra.ssh_and_execute_command(
-                        #         ip, user, password, container_stop_command)
+                        code, out, error = infra.ssh_and_execute_command(
+                            ip, user, password, container_start_command)
 
                     time.sleep(ha_interval)
                     infra.add_table_rows(self, table_name, [[ip,
