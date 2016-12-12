@@ -125,6 +125,7 @@ class JujuDisruptor(BaseDisruptor):
 
         ha_interval = self.get_ha_interval()
         disruption_count = self.get_disruption_count()
+        run_disruptors = self.get_run_disruptors()
         if disruption_type == 'infinite':
             # Override the disruption count in executor.yaml
             disruption_count = 1
@@ -145,22 +146,25 @@ class JujuDisruptor(BaseDisruptor):
                     ip = node
                     infra.display_on_terminal(self, "Stopping ", instance_id)
                     infra.display_on_terminal(self, "Executing `", container_stop_command, "` on ", ip)
-                    # if a ssh keyfile is provided use it, othwise fall back to
-                    # password auth
-                    if len(key_filename) > 0:
-                        infra.display_on_terminal(self, "Using ssh key authentication")
-                        code, out, err = infra.ssh_and_execute_command(
-                            ip, user, None, container_stop_command, timeout, None, key_filename)
+                    if (not run_disruptors):
+                        infra.display_on_terminal(self, "--- Dry run ---")
                     else:
-                        infra.display_on_terminal(self, "Using ssh password authentication")
-                        code, out, error = infra.ssh_and_execute_command(
-                            ip, user, password, container_stop_command)
-                    infra.add_table_rows(self, table_name, [[ip,
-                                                           instance_id,
-                                                           utils.get_timestamp(),
-                                                           HAConstants.WARNING +
-                                                           'Stopped' +
-                                                           HAConstants.ENDC]])
+                        # if a ssh keyfile is provided use it, othwise fall back to
+                        # password auth
+                        if len(key_filename) > 0:
+                            infra.display_on_terminal(self, "Using ssh key authentication")
+                            # code, out, err = infra.ssh_and_execute_command(
+                            #     ip, user, None, container_stop_command, timeout, None, key_filename)
+                        else:
+                            infra.display_on_terminal(self, "Using ssh password authentication")
+                            # code, out, error = infra.ssh_and_execute_command(
+                            #     ip, user, password, container_stop_command)
+                        infra.add_table_rows(self, table_name, [[ip,
+                                                               instance_id,
+                                                               utils.get_timestamp(),
+                                                               HAConstants.WARNING +
+                                                               'Stopped' +
+                                                               HAConstants.ENDC]])
                     if disruption_type == 'infinite':
                         infra.display_on_terminal(self,"Infinite disruption chosen bring up container manually")
                         break
@@ -169,24 +173,27 @@ class JujuDisruptor(BaseDisruptor):
                     time.sleep(ha_interval)
                     infra.display_on_terminal(self, "Starting ", instance_id)
                     infra.display_on_terminal(self, "Executing ", container_start_command)
-                    # if a ssh keyfile is provided use it, othwise fall back to
-                    # password auth
-                    if len(key_filename) > 0:
-                        infra.display_on_terminal(self, "Using ssh key authentication")
-                        code, out, err = infra.ssh_and_execute_command(
-                            ip, user, None, container_start_command, timeout, None, key_filename)
+                    if (not run_disruptors):
+                        infra.display_on_terminal(self, "--- Dry run ---")
                     else:
-                        infra.display_on_terminal(self, "Using ssh password authentication")
-                        code, out, error = infra.ssh_and_execute_command(
-                            ip, user, password, container_start_command)
+                        # if a ssh keyfile is provided use it, othwise fall back to
+                        # password auth
+                        if len(key_filename) > 0:
+                            infra.display_on_terminal(self, "Using ssh key authentication")
+                            # code, out, err = infra.ssh_and_execute_command(
+                            #     ip, user, None, container_start_command, timeout, None, key_filename)
+                        else:
+                            infra.display_on_terminal(self, "Using ssh password authentication")
+                            # code, out, error = infra.ssh_and_execute_command(
+                            #     ip, user, password, container_start_command)
 
-                    time.sleep(ha_interval)
-                    infra.add_table_rows(self, table_name, [[ip,
-                                                           instance_id,
-                                                           utils.get_timestamp(),
-                                                           HAConstants.OKGREEN +
-                                                           'Started' +
-                                                           HAConstants.ENDC]])
+                        time.sleep(ha_interval)
+                        infra.add_table_rows(self, table_name, [[ip,
+                                                               instance_id,
+                                                               utils.get_timestamp(),
+                                                               HAConstants.OKGREEN +
+                                                               'Started' +
+                                                               HAConstants.ENDC]])
 
         # bring it back to stable state
         # if disruption_type != 'infinite':

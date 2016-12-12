@@ -59,5 +59,8 @@ class BaseDisruptor(object):
     def get_disruption_count(self):
         return self.disruption_count
 
+    def get_run_disruptors(self):
+        return self.run_disruptors
+
     def set_expected_failures(self):
         raise NotImplementedError('Subclass should implement this method')

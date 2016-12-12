@@ -23,7 +23,7 @@ class HAExecutor(object):
                 'monitors': 'MintCream',
                 'runners': 'LightCyan1'}
 
-    def __init__(self, parser):
+    def __init__(self, parser, run_disruptors):
         """
         Get the resource form haparser as input parameter and creates
         all the objects that are needed to run the executor.
@@ -37,7 +37,7 @@ class HAExecutor(object):
         self.sync_objects = {}
         self.finish_execution_objects = {}
         self.open_pipes = []
-        self.run_disruptors = parser.run_disruptors
+        self.run_disruptors = run_disruptors
 
         if self.executor_data:
             ha_infra.dump_on_console(self.executor_data, "Executor Data")
@@ -309,8 +309,7 @@ class HAExecutor(object):
 	    setattr(class_object, "ha_start_delay", ha_start_delay)
         if disruption_count:
             setattr(class_object, "disruption_count", disruption_count)
-        if run_disruptors:
-            setattr(class_object, "run_disruptors", run_disruptors)
+        setattr(class_object, "run_disruptors", run_disruptors)
 
         getattr(class_object, cmd)(sync=sync,
                                    finish_execution=finish_execution)
