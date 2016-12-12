@@ -68,11 +68,12 @@ def ordered_load(stream, Loader=yaml.Loader, object_pairs_hook=OrderedDict):
 
 @infra.singleton
 class HAParser(object):
-    def __init__(self, cfg_file=None): 
+    def __init__(self, cfg_file=None, run_disruptors=False): 
         """
         :param cfg_file: input configuration file for the HA framework
         """
         self.user_input_file = cfg_file
+        self.run_disruptors = run_disruptors
         self.parsed_disruptor_config = {}
         self.parsed_runner_config = {}
         self.parsed_executor_config = {}

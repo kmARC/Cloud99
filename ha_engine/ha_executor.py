@@ -37,6 +37,7 @@ class HAExecutor(object):
         self.sync_objects = {}
         self.finish_execution_objects = {}
         self.open_pipes = []
+        self.run_disruptors = parser.run_disruptors
 
         if self.executor_data:
             ha_infra.dump_on_console(self.executor_data, "Executor Data")
@@ -142,6 +143,7 @@ class HAExecutor(object):
                                                    ha_interval,
 						   ha_start_delay,
                                                    disruption_count,
+                                                   self.run_disruptors,
                                                    parallel=parallel,
                                                    use_sync=use_sync)
 
@@ -176,7 +178,7 @@ class HAExecutor(object):
             os.environ['PROMPT_COMMAND'] = user_env_pc
 
     def execute_the_block(self, executor_index, nodes, step_action,
-                          ha_interval, ha_start_delay, disruption_count, parallel=False,
+                          ha_interval, ha_start_delay, disruption_count, run_disruptors, parallel=False,
                           use_sync=False):
 
         use_process = False
@@ -266,14 +268,14 @@ class HAExecutor(object):
                         target=self.execute_the_command,
                                                 args=(class_object, node,
                                                       step_action, ha_interval, ha_start_delay,
-                                                      disruption_count,
+                                                      disruption_count, run_disruptors,
                                                       sync, finish_execution))
                         '''
                     else:
                         t = threading.Thread(target=self.execute_the_command,
                                              args=(class_object, node,
                                                    step_action, ha_interval, ha_start_delay,
-                                                   disruption_count, sync,
+                                                   disruption_count, run_disruptors, sync,
                                                    finish_execution))
                     self.executor_threads.append(t)
                 else:
@@ -287,7 +289,7 @@ class HAExecutor(object):
     @staticmethod
     def execute_the_command(class_object, node, cmd, ha_interval,
 				ha_start_delay, 
-                            disruption_count, sync=None,
+                            disruption_count, run_disruptors=False, sync=None,
                             finish_execution=None):
         if class_object and cmd:
             entire_block_arguments = getattr(class_object,
@@ -307,6 +309,8 @@ class HAExecutor(object):
 	    setattr(class_object, "ha_start_delay", ha_start_delay)
         if disruption_count:
             setattr(class_object, "disruption_count", disruption_count)
+        if run_disruptors:
+            setattr(class_object, "run_disruptors", run_disruptors)
 
         getattr(class_object, cmd)(sync=sync,
                                    finish_execution=finish_execution)
